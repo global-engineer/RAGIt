@@ -1,42 +1,73 @@
-from langchain.document_loaders import TextLoader
+import requests
+from langchain_community.document_loaders import AsyncHtmlLoader
+from langchain_community.document_transformers import BeautifulSoupTransformer
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.chains import RetrievalQA
-from langchain.llms import OpenAI
+from dotenv import load_dotenv
+import os
+from langchain.embeddings import HuggingFaceEmbeddings
+embeddings = HuggingFaceEmbeddings(
+    model_name="BAAI/bge-small-en-v1.5",    
+    model_kwargs={'device':'cpu'},
+    encode_kwargs={'normalize_embeddings': False}
+)
+from langchain.vectorstores import FAISS
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+load_dotenv()
+
+HUGGIN_FACE_TOKEN=os.getenv("HUGGING_FACE_TOKEN")
 
 
 
-# Load your data (e.g., a .txt or .md file)
-loader = TextLoader("data/my_docs.txt", encoding="utf-8")
+urls = ["https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689",
+        "https://www.europarl.europa.eu/news/en/press-room/20240308IPR19015/artificial-intelligence-act-meps-adopt-landmark-law"]
+loader = AsyncHtmlLoader(urls)
 docs = loader.load()
 
-# Split into ~500-token chunks with 50-token overlap
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-chunks = splitter.split_documents(docs)
+bs_transformer = BeautifulSoupTransformer()
+docs_transformed = bs_transformer.transform_documents(docs, tags_to_extract=["span"])
 
-# Initialize embeddings
-embeddings = OpenAIEmbeddings()
+# Grab the first 1000 tokens of the site
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+chunks = text_splitter.split_documents(docs_transformed)
+db = FAISS.from_documents(chunks, embeddings)
 
-# Build the Chroma vector store
-vectorstore = Chroma.from_documents(
-    documents=chunks,
-    embedding=embeddings,
-    persist_directory="chroma_db"
-)
 
-# Persist the index for later reuse
-# vectorstore.persist()
 
-# Load persisted index
-# vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+retriever = db.as_retriever(search_type = "similarity",search_kwargs={"k":4})
+                            
+                            
 
-# Create a retriever (fetch top 3)
-retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+def get_context(question):
+    docs = retriever.get_relevant_documents(question)
+    context = ""
+    for i in range(len(docs)):
+        context +=  docs[i].page_content
+    return(context)
 
-# Define the QA chain
-qa_chain = RetrievalQA.from_chain_type(
-    llm=OpenAI(temperature=0),
-    chain_type="stuff",
-    retriever=retriever
-)
+question = "Where does the AI act apply ?"
+context= get_context(question)
+prompt = "You are an intelligent agent. Answer the questions based on the given context. \n"+ \
+    "Context: {}  \n".format(context) + \
+    "Question: {}".format(question)
+
+API_URL = "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct/v1/chat/completions"
+headers = {"Authorization": HUGGIN_FACE_TOKEN,
+          "Content-Type": "application/json"}
+payload = {"model": "microsoft/Phi-3-mini-4k-instruct","messages": [{"role": "user", "content": prompt}],"max_tokens": 500}
+
+
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
+
+output = query(payload)
+print(output['choices'][0]['message']['content'])
+
+
+@app.get("/")
+async def root():
+    return {output['choices'][0]['message']['content']}
