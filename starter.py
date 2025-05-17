@@ -5,6 +5,8 @@ from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.llms import OpenAI
 
+
+
 # Load your data (e.g., a .txt or .md file)
 loader = TextLoader("data/my_docs.txt", encoding="utf-8")
 docs = loader.load()
