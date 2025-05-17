@@ -68,6 +68,6 @@ output = query(payload)
 print(output['choices'][0]['message']['content'])
 
 
-@app.get("/")
+@app.get("/answer")
 async def root():
     return {output['choices'][0]['message']['content']}
