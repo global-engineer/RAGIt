@@ -7,7 +7,7 @@ To run the project you must have Docker installed.
 
 If you do,
 
-clone -> go to the root directory of the project and type
+clone -> Add your Hugging Face token to the .env file in the root directory -> go to the root directory of the project in your CLI and type
 
 **docker-compose up --build**
 
