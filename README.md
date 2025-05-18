@@ -6,7 +6,7 @@ If you do,
 
 clone -> go to the root directory of the project and type
 
-docker-compose up --build 
+**docker-compose up --build**
 
 TO make sure the containers are up and running, look for:
 
