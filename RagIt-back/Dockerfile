@@ -1,14 +1,16 @@
 # backend/Dockerfile
-FROM python:3.9-slim
+FROM python:3.13-slim
 
-WORKDIR /app
-COPY requirements.txt .
+WORKDIR /code
 
-RUN pip install --no-cache-dir -r requirements.txt
+# COPY ./requirements.txt /code/requirements.txt
 
-COPY . .
+COPY . /code/app
+
+RUN pip install --no-cache-dir --upgrade -r /code/app/requirements.txt
+
 
 # Expose FastApi port
 EXPOSE 8000
 
-CMD ["fastapi", "--bind", "0.0.0.0:8000", "run starter.py"]
+CMD ["fastapi", "run", "app/starter.py", "--port", "8000"]

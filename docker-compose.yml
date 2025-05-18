@@ -1,0 +1,30 @@
+
+services:
+  backend:
+    build:
+      context: ./RagIt-back
+      dockerfile: Dockerfile
+    container_name: myapp-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - myapp-network
+
+  frontend:
+    build:
+      context: ./RagIt-front
+      dockerfile: Dockerfile
+    container_name: myapp-frontend
+    ports:
+      - "80:80"           # Maps host 3000 → container 80
+    depends_on:
+      - backend
+    volumes:
+     - .:/app
+     - ./node_modules:/app/node_modules
+    networks:
+      - myapp-network
+
+networks:
+  myapp-network:
+    driver: bridge
