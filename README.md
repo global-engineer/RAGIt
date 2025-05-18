@@ -1,4 +1,4 @@
-
+RAG implementation using Langchain to access elements in <span> of given sources and use them as the knowledge base for user queries.
 
 To run the project you must have Docker installed.
 
