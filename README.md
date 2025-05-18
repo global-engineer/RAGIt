@@ -5,9 +5,10 @@ RAGIt
 
 To run the project you must have Docker installed.
 
-If you do,
+If you do, to run the project :
 
-clone -> Add your Hugging Face token to the RagIt-back/.env file in the root directory against HUGGING_FACE_TOKEN key. 
+1)clone  
+2)Add your Hugging Face token to the RagIt-back/.env file in the root directory against HUGGING_FACE_TOKEN key. 
 Then go to the root directory of the project in your CLI and type
 
 **docker-compose up --build**
