@@ -23,7 +23,7 @@ TO make sure the containers are up and running, look for:
 
 Now you can access you homepage at http://localhost
 
-Enter your Question and the Sources that you want to serve as your knowledge base.  
+Enter your Question and the Sources that you want to serve as your knowledge base and hit submit.
 
 sample output
 
